@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+</head>
+<body>
+<button id="download-button">Download sample!</button>
+<script type="text/javascript" src="/vendors/file-saver.js/FileSaver.js"></script>
+
+<script type="text/javascript">
+
+    var downloadButton = document.getElementById("download-button");
+
+    downloadButton.onclick = function() {
+
+        var xhr = new XMLHttpRequest();
+
+        xhr.open('POST', '/getFile', true);
+        xhr.responseType = 'arraybuffer';
+
+        xhr.onreadystatechange = function () {
+            if ( this.readyState == 4 && this.status == 200 ) {
+                var blob = new Blob([this.response], {type: ""});
+                saveAs(blob, "test.xlsx");
+            }
+        };
+        console.log(xhr);
+//        xhr.send();
+    };
+</script>
+</body>
+</html>
