@@ -11,9 +11,10 @@ var resultCSV = json2csv({data: dataFromApi});
 var resultXLS = json2xls({data: dataFromApi});
 
 
-var workbook = new Excel.Workbook(dataFromApi);
-// var sheet = workbook.addWorksheet('Data from API');
-// workbook.commit();
+var workbook = new Excel.Workbook('dataFromApi');
+var sheet = workbook.addWorksheet('Data from API');
+sheet.commit();
+workbook.commit();
 
 
 var response = 'File CSV: <br/>' + resultCSV + '<br/>' + 'File XLS: <br/>' + resultXLS;

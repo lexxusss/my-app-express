@@ -9,7 +9,15 @@ var routes = require('./routes/index');
 var users = require('./routes/users');
 
 var app = express();
-var Excel = require("exceljs");
+
+var Excel = require('exceljs');
+var excelbuilder = require('msexcel-builder');
+var json2xls = require('json2xls');
+
+var fs = require("fs");
+var JSZip = require("jszip");
+
+var zip = new JSZip();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -30,34 +38,51 @@ app.use('/users', users);
 app.get("/customers/download", function(req, res) {
     res.sendFile(__dirname + "/routes/customers/download.html");
 });
-app.post("/getfile", function(req, res) {
+app.get("/getfile", function(req, res) {
 
     var options = {
         useStyles: true,
         useSharedStrings: true
     };
 
-    var workbook = new Excel.stream.xlsx.WorkbookWriter(options);
+    // var workbook = new Excel.stream.xlsx.WorkbookWriter(options);
+    // workbook.zip.pipe(res);
+    // var worksheet = workbook.addWorksheet("My Sheet");
+    //
+    // worksheet.columns = [
+    //     { header: "Id", key: "id", width: 10 },
+    //     { header: "Name", key: "name", width: 32 },
+    //     { header: "D.O.B.", key: "DOB", width: 10 }
+    // ];
+    // worksheet.addRow({
+    //     id: 100,
+    //     name: "name",
+    //     DOB: "DOB"
+    // }).commit();
+    //
+    // worksheet.commit();
+    // workbook.commit();
 
-    workbook.zip.pipe(res);
 
-    var worksheet = workbook.addWorksheet("My Sheet");
+    var workbook = excelbuilder.createWorkbook('./', 'sample.xlsx')
 
-    worksheet.columns = [
-        { header: "Id", key: "id", width: 10 },
-        { header: "Name", key: "name", width: 32 },
-        { header: "D.O.B.", key: "DOB", width: 10 }
-    ];
+    // Create a new worksheet with 10 columns and 12 rows
+    var sheet1 = workbook.createSheet('sheet1', 10, 12);
 
-    worksheet.addRow({
-        id: 100,
-        name: "name",
-        DOB: "DOB"
-    }).commit();
+    // Fill some data
+    sheet1.set(1, 1, 'I am title');
+    for (var i = 2; i < 5; i++)
+        sheet1.set(i, 1, 'test'+i);
 
-    worksheet.commit();
+    // Save it
+    workbook.save(function(ok){
+        if (!ok)
+            workbook.cancel();
+        else
+            console.log('congratulations, your workbook created');
+    });
 
-    workbook.commit();
+    return false;
 });
 
 // catch 404 and forward to error handler

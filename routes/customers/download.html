@@ -2,31 +2,97 @@
 <html>
 <head>
     <title>Home</title>
+    <script src="/packages/json2xls/node_modules/excel-export/node_modules/node-zip/node_modules/jszip/vendor/FileSaver.js"></script>
+    <script src="/packages/jszip/dist/jszip.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
 </head>
 <body>
-<button id="download-button">Download sample!</button>
-<script type="text/javascript" src="/vendors/file-saver.js/FileSaver.js"></script>
-
 <script type="text/javascript">
+    $(document).ready(function () {
+        var dataFromApi = [{"Vehicle":"BMW","Date":"30, Jul 2013 09:24 AM","Location":"Hauz Khas, Enclave, New Delhi, Delhi, India","Speed":42},{"Vehicle":"Honda CBR","Date":"30, Jul 2013 12:00 AM","Location":"Military Road,  West Bengal 734013,  India","Speed":0},{"Vehicle":"Supra","Date":"30, Jul 2013 07:53 AM","Location":"Sec-45, St. Angel's School, Gurgaon, Haryana, India","Speed":58},{"Vehicle":"Land Cruiser","Date":"30, Jul 2013 09:35 AM","Location":"DLF Phase I, Marble Market, Gurgaon, Haryana, India","Speed":83},{"Vehicle":"Suzuki Swift","Date":"30, Jul 2013 12:02 AM","Location":"Behind Central Bank RO, Ram Krishna Rd by-lane, Siliguri, West Bengal, India","Speed":0},{"Vehicle":"Honda Civic","Date":"30, Jul 2013 12:00 AM","Location":"Behind Central Bank RO, Ram Krishna Rd by-lane, Siliguri, West Bengal, India","Speed":0},{"Vehicle":"Honda Accord","Date":"30, Jul 2013 11:05 AM","Location":"DLF Phase IV, Super Mart 1, Gurgaon, Haryana, India","Speed":71}];
 
-    var downloadButton = document.getElementById("download-button");
+        JSONToCSVConvertor(dataFromApi, "Data from API", false);
+        function JSONToCSVConvertor(JSONData, ReportTitle, ShowLabel) {
+            var arrData = typeof JSONData != 'object' ? JSON.parse(JSONData) : JSONData;
+            var CSV = '';
 
-    downloadButton.onclick = function() {
+            CSV += ReportTitle + '\r\n\n';
+            CSV += ShowLabel ? generateLabel(arrData) : '';
+            CSV += fillInCSV(arrData);
 
-        var xhr = new XMLHttpRequest();
-
-        xhr.open('POST', '/getFile', true);
-        xhr.responseType = 'arraybuffer';
-
-        xhr.onreadystatechange = function () {
-            if ( this.readyState == 4 && this.status == 200 ) {
-                var blob = new Blob([this.response], {type: ""});
-                saveAs(blob, "test.xlsx");
+            if (CSV == '') {
+                alert("Invalid data");
+                return;
             }
-        };
-        console.log(xhr);
-//        xhr.send();
-    };
+
+            var fileName = "MyReport_" + ReportTitle.replace(/ /g,"_");
+
+            var uriCsv = 'data:text/csv;charset=utf-8,' + escape(CSV);
+            var uriXls = 'data:application/xls;charset=utf-8,' + escape(CSV);
+
+            var zip = new JSZip();
+            zip.file(uriCsv, fileName);
+            zip.file(uriXls, fileName);
+//            zip.generateAsync({type: "blob"}).then(function(content) {
+//                saveAs(content, fileName + ".zip");
+//            });
+//            zip.generateAsync({type: "base64"}).then(function (base64) {
+//                downloadFile(fileName, "data:application/zip;base64," + base64, 'zip');
+//            });
+            zip.generateAsync({type: "base64"}).then(function (base64) {
+                generateLink(fileName, "data:application/zip;base64," + base64, 'zip');
+            });
+        }
+
+        function generateLink(fileName, uri, ext) {
+            var link = document.createElement("a");
+            link.innerHTML = 'Download Zip!';
+            link.id = 'download_link';
+            link.href = uri;
+            link.download = fileName + "." + ext;
+
+            document.body.appendChild(link);
+        }
+
+        function downloadFile(fileName, uri, ext) {
+            var link = document.createElement("a");
+            link.href = uri;
+
+            link.style = "visibility:hidden";
+            link.download = fileName + "." + ext;
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function generateLabel(arrData) {
+            var row = "";
+            for (var index in arrData[0]) {
+                row += index + ',';
+            }
+
+            return row.slice(0, -1);
+        }
+
+        function fillInCSV(arrData) {
+            var CSV = '';
+
+            for (var i = 0; i < arrData.length; i++) {
+                var row = "";
+
+                for (var index in arrData[i]) {
+                    row += '"' + arrData[i][index] + '",';
+                }
+
+                row.slice(0, row.length - 1);
+
+                CSV += row + '\r\n';
+            }
+
+            return CSV;
+        }
+    });
 </script>
 </body>
 </html>
