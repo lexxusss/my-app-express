@@ -11,15 +11,38 @@
     $(document).ready(function () {
         var dataFromApi = [];
 
+        var limit = qs('limit');
+        var offset = qs('offset');
+
+        var remoteUrl = 'http://pure-island-2586.herokuapp.com/v1/customers';
+
+        if (limit || offset) {
+            if (limit) {
+                remoteUrl += '?limit=' + limit;
+                if (offset) {
+                    remoteUrl += '&offset=' + offset;
+                }
+            } else if (offset) {
+                remoteUrl += '?offset=' + offset;
+            }
+        }
+        console.log(remoteUrl);
+
         var XHR = ("onload" in new XMLHttpRequest()) ? XMLHttpRequest : XDomainRequest;
         var xhr = new XHR();
-        xhr.open('GET', 'http://pure-island-2586.herokuapp.com/v1/customers', true);
+        xhr.open('GET', remoteUrl, true);
         xhr.onload = function() {
             dataFromApi.push(this.responseText);
             console.log(dataFromApi);
             JSONToCSVConvertor(dataFromApi, "Data from API", false);
         };
         xhr.send();
+
+        function qs(key) {
+            key = key.replace(/[*+?^$.\[\]{}()|\\\/]/g, "\\$&"); // escape RegEx meta chars
+            var match = location.search.match(new RegExp("[?&]"+key+"=([^&]+)(&|$)"));
+            return match && decodeURIComponent(match[1].replace(/\+/g, " "));
+        }
 
         function JSONToCSVConvertor(JSONData, ReportTitle, ShowLabel) {
             var arrData = typeof JSONData != 'object' ? JSON.parse(JSONData) : JSONData;
